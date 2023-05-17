@@ -1,19 +1,18 @@
-// 1st Type of create server with arrow function:
-// __________________________________________
-// const http = require('http');
+const express = require("express");
+var connectToMongo = require('./db');
+// var getData = require('./get')
 
-// http.createServer((req,resp)=>{
-//     resp.write("Helloooo World");
-//     resp.end();
-// }).listen(8000);
-// __________________________________________
-// 2nd Type of create server with function:
-const http = require('http');
+const app = express();
+const port = 4000;
+app.use(express.json());
+connectToMongo()
 
-function dataControl(req,resp)
-{
-    resp.write("Helllooo Worldd")
-    resp.end();
-}
-
-http.createServer(dataControl).listen(8000);
+app.get('/', async (req, res) => {
+    let data = await dbConnect();
+    data = await data.find({ email: 'johhn' }).toArray();
+    // console.log(data)
+    res.send(data);
+});
+app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`);
+});
