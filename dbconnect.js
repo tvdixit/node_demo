@@ -5,4 +5,4 @@
 //     data = await data.find({type:'fruit'}).toArray();
 //     console.log(data);
 // }
-// database();
+// database();p
