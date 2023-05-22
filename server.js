@@ -14,48 +14,61 @@ const bcrypt = require("bcrypt")
 
 //post:
 app.post('/register', async (req, res) => {
-
-try {
-    const {password} = req.body;
-    const saltRounds = 10;
-    bcrypt.genSalt(saltRounds, function (err, salt) {
-        bcrypt.hash(password, salt, async function (err, hash) {   
-            
-            const data = new User({
-                first_name: req.body.first_name,
-                last_name: req.body.last_name,
-                email: req.body.email,
-                password: hash,
-                phone: req.body.phone,
-                avatar: req.body.avatar,
-                gender: req.body.gender,
-                dob: req.body.dob,
-                active: req.body.active,
-                address: req.body.address,
-                city: req.body.city
+    try {
+        const { password } = req.body;
+        const saltRounds = 10;
+        bcrypt.genSalt(saltRounds, function (err, salt) {
+            bcrypt.hash(password, salt, async function (err, hash) {
+                const data = new User({
+                    first_name: req.body.first_name,
+                    last_name: req.body.last_name,
+                    email: req.body.email,
+                    password: hash,
+                    phone: req.body.phone,
+                    avatar: req.body.avatar,
+                    gender: req.body.gender,
+                    dob: req.body.dob,
+                    active: req.body.active,
+                    address: req.body.address,
+                    city: req.body.city
+                });
+                const dataToSave = await data.save();
+                res.status(200).json(dataToSave)
             });
-            const dataToSave = await data.save();
-            res.status(200).json(dataToSave)
         });
-    });
-    //
-       
     }
     catch (error) {
         res.status(400).json({ message: error.message })
     }
 });
+// compare password :
+// const password = "12345";
+// const hash = "$2b$10$ByQ1/Tntm7s80HjXVnWfK.Kx6aNoYjgfBXleSX0zGr4/j19HLbFNe";
+
 // //email exists:
 app.post("/login", async (req, res) => {
-    const { email, password } = req.body
     try {
-        const user = await User.findOne({ email, password })
-        if (!user) {
-            res.status(401).json("Email or password invalid");
-        }
-        else {
-            res.status(200).json("Login successful")
-        }
+        const { email, password } = req.body
+        const users = await User.findOne({ email })
+        console.log(users, "111")
+
+        bcrypt.compare(password, users.password, function (error, ismatch) {
+            console.log(error, "errrr");
+            console.log(ismatch, "aaaaaa");
+
+            if (!ismatch) {
+                console.log("password not match");
+                res.status(400).json({ message: 'password not match' })
+            } else {
+                res.status(200).json({ message: 'Login successfully' })
+            }
+            // if (!users) {
+            //     res.status(401).json("Email or password invalid");
+            // }
+            // else {
+            //     res.status(200).json("Login successful");
+            // }
+        })
     } catch (err) {
         res.status(400).json("Error")
         console.log(err);
@@ -92,6 +105,35 @@ app.post('/data/posts', async (req, res) => {
         res.status(400).json({ message: error.message })
     }
 });
+// update api = find by email:
+app.post('/update', async (req, res) => {
+    try {
+        const { email } = req.body
+        const data = await User.findOne({ email });
+        console.log(User);
+        res.send()
+
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message })
+    }
+});
+// update api:
+app.patch('/update/data', async (req, res) => {
+    try {
+        const updatedData = req.body
+        await User.findOneAndUpdate({ email: req.body.email },
+            updatedData).then(async(data) => {
+                console.log(data);
+                var item = await User.findById(data._id);
+                res.send(item)
+            })
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message })
+    }
+});
+
 
 app.listen(3000, () => {
     console.log(`Server started at ${3000}`)
