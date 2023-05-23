@@ -84,6 +84,31 @@ app.get('/getdata', async (req, res) => {
         res.status(500).json({ message: error.message })
     }
 })
+
+// pagination :
+app.get('/paginate', async (req, res) => {
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 2;
+    const search = req.query.search || "";
+    const firstindex = (page - 1) * limit
+    // new:
+    try {
+        const user = await User.find().skip(firstindex).limit(limit);
+        const data = await User.find({ first_name: { $regex: search, $options: "i" } }).skip(firstindex).limit(limit);
+        console.log(data);
+        
+        res.json({
+            user: data,
+            page: req.query.page,
+            search:req.query.search,
+
+        });
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message})
+    }
+})
+
 //Get by id :
 app.get('/getdata/:id', async (req, res) => {
     try {
@@ -123,7 +148,7 @@ app.patch('/update/data', async (req, res) => {
     try {
         const updatedData = req.body
         await User.findOneAndUpdate({ email: req.body.email },
-            updatedData).then(async(data) => {
+            updatedData).then(async (data) => {
                 console.log(data);
                 var item = await User.findById(data._id);
                 res.send(item)
@@ -133,8 +158,40 @@ app.patch('/update/data', async (req, res) => {
         res.status(400).json({ message: error.message })
     }
 });
+//___________________________
+//Upload image:
+app.post('/upload/image', async(req, res, err)=>{
+    // handlemultipartdata(req, res, async(err)=>{
+    if (err) {
+        res.json({ msgs: err.message });
+    }
+    // const path = require("path");
+    const filePath = req.query.path
+    if (!filePath) {
+        return
+    }
+    User.upload(filePath, (error, result) => {
+        const imageUpload = (req, res) => {
+            res.send("file upload")
+        }
+        if (error) {
+            res.send(error.message)
+        } else {
+            res.json({
+                body: req.body,
+                file: result,
+            });
+        }
+    })
+    const file = req.files.upload
+    const filePath = path.join(__dirname, 'public', 'images', `${file.name}`)
 
+    file.mv(filePath, err => {
+        if (err) return res.status(500).send(err)
+});
 
+// });
+//___________________________
 app.listen(3000, () => {
     console.log(`Server started at ${3000}`)
 })
