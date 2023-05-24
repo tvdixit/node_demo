@@ -1,6 +1,7 @@
 const express = require("express");
 // var bodyParser = require('body-parser');
 const dbconnect = require('./db.js')
+const multer = require('multer');
 dbconnect();
 
 const app = express();
@@ -88,24 +89,26 @@ app.get('/getdata', async (req, res) => {
 // pagination :
 app.get('/paginate', async (req, res) => {
     const page = req.query.page || 1;
-    const limit = req.query.limit || 2;
+    const size = User(req.body._id);
+    
+    const limit = req.query.limit || 2 || size();
     const search = req.query.search || "";
     const firstindex = (page - 1) * limit
     // new:
     try {
         const user = await User.find().skip(firstindex).limit(limit);
         const data = await User.find({ first_name: { $regex: search, $options: "i" } }).skip(firstindex).limit(limit);
-        console.log(data);
-        
+        // console.log(data);
         res.json({
             user: data,
             page: req.query.page,
-            search:req.query.search,
-
+            size:req.query.size,
+            search: req.query.search,
         });
+        console.log(size);
     }
     catch (error) {
-        res.status(500).json({ message: error.message})
+        res.status(500).json({ message: error.message })
     }
 })
 
@@ -159,40 +162,42 @@ app.patch('/update/data', async (req, res) => {
     }
 });
 //___________________________
-//Upload image:
-app.post('/upload/image', async(req, res, err)=>{
-    // handlemultipartdata(req, res, async(err)=>{
-    if (err) {
-        res.json({ msgs: err.message });
-    }
-    // const path = require("path");
-    const filePath = req.query.path
-    if (!filePath) {
-        return
-    }
-    User.upload(filePath, (error, result) => {
-        const imageUpload = (req, res) => {
-            res.send("file upload")
-        }
-        if (error) {
-            res.send(error.message)
-        } else {
-            res.json({
-                body: req.body,
-                file: result,
-            });
+//Upload image: post
+const { v4: uuidv4 } = require('uuid');
+const multiple = 5
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: function (req, file, cb) {
+            cb(null, 'upload/image')
+            // console.log(multer.diskStorage);
+        },
+        filename: (req, file, cb) => {
+            const fileExtName = file.originalname.substring(file.originalname.lastIndexOf('.'));
+            const fileName = `${uuidv4()}${fileExtName}`;
+            cb(null, fileName);
+            // console.log(file.originalname);
+            // console.log(file);
         }
     })
-    const file = req.files.upload
-    const filePath = path.join(__dirname, 'public', 'images', `${file.name}`)
-
-    file.mv(filePath, err => {
-        if (err) return res.status(500).send(err)
-});
-
-// });
+    // }).array('image',multiple)
+}).single('image', multiple);
+app.post('/upload/image', upload, async (req, res) => {
+    // console.log(upload);
+    res.send("file upload")
+})
+//_______________________________________
+// Delete data :
+app.get("/delete/:id", async(req, res)=>{
+        try {
+            const data = await User.findByIdAndDelete(req.params.id);
+            res.json(data)
+            console.log(User.findByIdAndDelete(req.params.id))
+        }
+        catch (error) {
+            res.status(500).json({ message: error.message })
+        }
+    })
 //___________________________
 app.listen(3000, () => {
     console.log(`Server started at ${3000}`)
 })
-
