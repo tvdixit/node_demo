@@ -88,10 +88,8 @@ app.get('/getdata', async (req, res) => {
 
 // pagination :
 app.get('/paginate', async (req, res) => {
-    const page = req.query.page || 1;
-    const size = User(req.body._id);
-    
-    const limit = req.query.limit || 2 || size();
+    const page = req.query.page || 1;    
+    const limit = req.query.limit || 2;
     const search = req.query.search || "";
     const firstindex = (page - 1) * limit
     // new:
@@ -102,7 +100,6 @@ app.get('/paginate', async (req, res) => {
         res.json({
             user: data,
             page: req.query.page,
-            size:req.query.size,
             search: req.query.search,
         });
         console.log(size);
@@ -179,8 +176,9 @@ const upload = multer({
             // console.log(file);
         }
     })
-    // }).array('image',multiple)
-}).single('image', multiple);
+}).fields([{name:'image'},{name:'image1'}])
+    // }).array('image', multiple)
+// }).single('image', multiple);
 app.post('/upload/image', upload, async (req, res) => {
     // console.log(upload);
     res.send("file upload")
@@ -197,6 +195,16 @@ app.get("/delete/:id", async(req, res)=>{
             res.status(500).json({ message: error.message })
         }
     })
+//___________________________
+
+// db.post.aggregate([
+//     {
+//         $match: {likes:{$gt:1}}
+//     },
+//     {
+
+//     }
+// ])
 //___________________________
 app.listen(3000, () => {
     console.log(`Server started at ${3000}`)
