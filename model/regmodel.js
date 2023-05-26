@@ -32,6 +32,10 @@ const roleSchema = new mongoose.Schema({
         type: Date,
         required: true,
     },
+    age: {
+        type: Number,
+        required: true,
+    },
     active: {
         type: Boolean,
         required: true,

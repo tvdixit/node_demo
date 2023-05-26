@@ -29,6 +29,7 @@ app.post('/register', async (req, res) => {
                     avatar: req.body.avatar,
                     gender: req.body.gender,
                     dob: req.body.dob,
+                    age: req.body.age,
                     active: req.body.active,
                     address: req.body.address,
                     city: req.body.city
@@ -88,7 +89,7 @@ app.get('/getdata', async (req, res) => {
 
 // pagination :
 app.get('/paginate', async (req, res) => {
-    const page = req.query.page || 1;    
+    const page = req.query.page || 1;
     const limit = req.query.limit || 2;
     const search = req.query.search || "";
     const firstindex = (page - 1) * limit
@@ -176,8 +177,8 @@ const upload = multer({
             // console.log(file);
         }
     })
-}).fields([{name:'image'},{name:'image1'}])
-    // }).array('image', multiple)
+}).fields([{ name: 'image' }, { name: 'image1' }])
+// }).array('image', multiple)
 // }).single('image', multiple);
 app.post('/upload/image', upload, async (req, res) => {
     // console.log(upload);
@@ -185,26 +186,118 @@ app.post('/upload/image', upload, async (req, res) => {
 })
 //_______________________________________
 // Delete data :
-app.get("/delete/:id", async(req, res)=>{
-        try {
-            const data = await User.findByIdAndDelete(req.params.id);
-            res.json(data)
-            console.log(User.findByIdAndDelete(req.params.id))
-        }
-        catch (error) {
-            res.status(500).json({ message: error.message })
-        }
-    })
+app.get("/delete/:id", async (req, res) => {
+    try {
+        const data = await User.findByIdAndDelete(req.params.id);
+        res.json(data)
+        console.log(User.findByIdAndDelete(req.params.id))
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
 //___________________________
-
-// db.post.aggregate([
-//     {
-//         $match: {likes:{$gt:1}}
-//     },
-//     {
-
-//     }
-// ])
+//aggregation :
+app.get('/aggregate/match', async (req, res) => {
+    try {
+        User.aggregate([{ $match: { gender: req.query.gender } }]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//____________________________________
+app.get('/aggregate/group', async (req, res) => {
+    try {
+        User.aggregate([{ $group: { _id: "$age", names: { $push: "$first_name" } } }]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//___________________________
+app.get('/aggregate/alldata', async (req, res) => {
+    try {
+        User.aggregate([{ $group: { _id: "$age", names: { $push: "$$ROOT" } } }]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//______________________________
+app.get('/aggregate/match/group', async (req, res) => {
+    try {
+        User.aggregate([
+            { $match: { gender: "male" } },
+            { $group: { _id: "$age", names: { $push: "$first_name" }, personsAge: { $sum: 1 } } }
+        ]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//______________________________
+app.get('/aggregate/match/group/sort', async (req, res) => {
+    try {
+        User.aggregate([
+            { $match: { gender: "male" } },
+            { $group: { _id: "$age", personsAge: { $sum: 1 } } },
+            { $sort: { personsdecreseAge: -1 } }
+        ]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//______________________________
+app.get('/aggregate/match/group/sort/group', async (req, res) => {
+    try {
+        User.aggregate([
+            { $match: { gender: "male" } },
+            { $group: { _id: "$age", personsAge: { $sum: 1 } } },
+            { $sort: { personsdecreseAge: -1 } },
+            { $group: { _id: null, maxnumber: { $max: "$number" } } }
+        ]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//______________________________________
+app.get('/aggregate/unwind', async (req, res) => {
+    try {
+        User.aggregate([{ $unwind: "$email" }, { $group: { _id: "$age", email: { $push: "$email" } } }
+        ]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+//_________________________________________
+app.get('/aggregate/group/avg', async (req, res) => {
+    try {
+        User.aggregate([{ $group: { _id: null, avgofage: { $avg: "$age" } } }]).then((data) => {
+            res.json(data)
+        })
+    }
+    catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
 //___________________________
 app.listen(3000, () => {
     console.log(`Server started at ${3000}`)
