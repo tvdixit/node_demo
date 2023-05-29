@@ -1,20 +1,7 @@
-const express = require("express");
-// var bodyParser = require('body-parser');
-const dbconnect = require('./db.js')
-const multer = require('multer');
-dbconnect();
-
-const app = express();
-app.use(express.json());
-
-// const User = require("./model/user");
-const User = require("./model/regmodel");
-const { model } = require("mongoose");
 const bcrypt = require("bcrypt")
-// const { hash } = require("bcrypt");
+const User = require("../model/regmodel");
 
-//post:
-app.post('/register', async (req, res) => {
+const Signup = async (req, res, next) => {
     try {
         const { password } = req.body;
         const saltRounds = 10;
@@ -42,13 +29,9 @@ app.post('/register', async (req, res) => {
     catch (error) {
         res.status(400).json({ message: error.message })
     }
-});
-// compare password :
-// const password = "12345";
-// const hash = "$2b$10$ByQ1/Tntm7s80HjXVnWfK.Kx6aNoYjgfBXleSX0zGr4/j19HLbFNe";
+}
 
-// //email exists:
-app.post("/login", async (req, res) => {
+const Login = async (req, res) => {
     try {
         const { email, password } = req.body
         const users = await User.findOne({ email })
@@ -56,11 +39,11 @@ app.post("/login", async (req, res) => {
 
         bcrypt.compare(password, users.password, function (error, ismatch) {
             console.log(error, "errrr");
-            console.log(ismatch, "Dixit");
+            console.log(ismatch, "aaaaaa");
 
             if (!ismatch) {
-                console.log("password not match Try again");
-                res.status(400).json({ message: 'password not match Try again' })
+                console.log("password not match");
+                res.status(400).json({ message: 'password not match' })
             } else {
                 res.status(200).json({ message: 'Login successfully' })
             }
@@ -69,9 +52,9 @@ app.post("/login", async (req, res) => {
         res.status(400).json("Error")
         console.log(err);
     }
-});
-//get :
-app.get('/getdata', async (req, res) => {
+}
+
+const Getdata = async (req, res) => {
     try {
         const data = await User.find();
         res.json(data)
@@ -79,9 +62,9 @@ app.get('/getdata', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-// pagination :
-app.get('/paginate', async (req, res) => {
+}
+
+const Paginate = async (req, res) => {
     const page = req.query.page || 1;
     const limit = req.query.limit || 2;
     const search = req.query.search || "";
@@ -101,10 +84,9 @@ app.get('/paginate', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
+}
 
-//Get by id :
-app.get('/getdata/:id', async (req, res) => {
+const GetdataByid = async (req, res) => {
     try {
         const data = await User.findById(req.params.id);
         res.json(data)
@@ -112,20 +94,9 @@ app.get('/getdata/:id', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-// get data by id in body :
-app.post('/data/posts', async (req, res) => {
-    try {
-        const data = await User.findById(req.body._id);
-        console.log(User, "Data From");
-        res.send(data)
-    }
-    catch (error) {
-        res.status(400).json({ message: error.message })
-    }
-});
-// update api = find by email:
-app.post('/update', async (req, res) => {
+}
+
+const Update = async (req, res) => {
     try {
         const { email } = req.body
         const data = await User.findOne({ email });
@@ -136,9 +107,9 @@ app.post('/update', async (req, res) => {
     catch (error) {
         res.status(400).json({ message: error.message })
     }
-});
-// update api:
-app.patch('/update/data', async (req, res) => {
+}
+
+const UpdatedData = async (req, res) => {
     try {
         const updatedData = req.body
         await User.findOneAndUpdate({ email: req.body.email },
@@ -151,35 +122,9 @@ app.patch('/update/data', async (req, res) => {
     catch (error) {
         res.status(400).json({ message: error.message })
     }
-});
-//___________________________
-//Upload image: post
-const { v4: uuidv4 } = require('uuid');
-const multiple = 5
-const upload = multer({
-    storage: multer.diskStorage({
-        destination: function (req, file, cb) {
-            cb(null, 'upload/image')
-            // console.log(multer.diskStorage);
-        },
-        filename: (req, file, cb) => {
-            const fileExtName = file.originalname.substring(file.originalname.lastIndexOf('.'));
-            const fileName = `${uuidv4()}${fileExtName}`;
-            cb(null, fileName);
-            // console.log(file.originalname);
-            // console.log(file);
-        }
-    })
-}).fields([{ name: 'image' }, { name: 'image1' }])
-// }).array('image', multiple)
-// }).single('image', multiple);
-app.post('/upload/image', upload, async (req, res) => {
-    // console.log(upload);
-    res.send("file upload")
-})
-//_______________________________________
-// Delete data :
-app.get("/delete/:id", async (req, res) => {
+}
+
+const Delete = async (req, res) => {
     try {
         const data = await User.findByIdAndDelete(req.params.id);
         res.json(data)
@@ -188,10 +133,11 @@ app.get("/delete/:id", async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//___________________________
-//aggregation :
-app.get('/aggregate/match', async (req, res) => {
+}
+
+// aggregation :
+
+const Match = async (req, res) => {
     try {
         User.aggregate([{ $match: { gender: req.query.gender } }]).then((data) => {
             res.json(data)
@@ -200,9 +146,9 @@ app.get('/aggregate/match', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//____________________________________
-app.get('/aggregate/group', async (req, res) => {
+}
+
+const Group = async (req, res) => {
     try {
         User.aggregate([{ $group: { _id: "$age", names: { $push: "$first_name" } } }]).then((data) => {
             res.json(data)
@@ -211,9 +157,9 @@ app.get('/aggregate/group', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//___________________________
-app.get('/aggregate/alldata', async (req, res) => {
+}
+
+const Alldata = async (req, res) => {
     try {
         User.aggregate([{ $group: { _id: "$age", names: { $push: "$$ROOT" } } }]).then((data) => {
             res.json(data)
@@ -222,9 +168,9 @@ app.get('/aggregate/alldata', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//______________________________
-app.get('/aggregate/match/group', async (req, res) => {
+}
+
+const MatchGroup = async (req, res) => {
     try {
         User.aggregate([
             { $match: { gender: "male" } },
@@ -236,9 +182,9 @@ app.get('/aggregate/match/group', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//______________________________
-app.get('/aggregate/match/group/sort', async (req, res) => {
+}
+
+const MatchGroupSort = async (req, res) => {
     try {
         User.aggregate([
             { $match: { gender: "male" } },
@@ -251,9 +197,9 @@ app.get('/aggregate/match/group/sort', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//______________________________
-app.get('/aggregate/match/group/sort/group', async (req, res) => {
+}
+
+const MatchGroupSortGroup = async (req, res) => {
     try {
         User.aggregate([
             { $match: { gender: "male" } },
@@ -267,9 +213,9 @@ app.get('/aggregate/match/group/sort/group', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//______________________________________
-app.get('/aggregate/unwind', async (req, res) => {
+}
+
+const Unwind = async (req, res) => {
     try {
         User.aggregate([{ $unwind: "$email" }, { $group: { _id: "$age", email: { $push: "$email" } } }
         ]).then((data) => {
@@ -279,9 +225,9 @@ app.get('/aggregate/unwind', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
-//_________________________________________
-app.get('/aggregate/group/avg', async (req, res) => {
+}
+
+const GroupAvg = async (req, res) => {
     try {
         User.aggregate([{ $group: { _id: null, avgofage: { $avg: "$age" } } }]).then((data) => {
             res.json(data)
@@ -290,17 +236,23 @@ app.get('/aggregate/group/avg', async (req, res) => {
     catch (error) {
         res.status(500).json({ message: error.message })
     }
-})
+}
 
-
-
-// const { Users } = require("./routes/index")
-// app.use("/user", Users)
-
-
-const { Product } = require("./routes/index")
-app.use("/product", Product)
-//___________________________
-app.listen(3000, () => {
-    console.log(`Server started at ${3000}`)
-})
+module.exports = {
+    Signup,
+    Login,
+    Getdata,
+    Paginate,
+    GetdataByid,
+    Update,
+    UpdatedData,
+    Delete,
+    Match,
+    Group,
+    Alldata,
+    MatchGroup,
+    MatchGroupSort,
+    MatchGroupSortGroup,
+    Unwind,
+    GroupAvg,
+};
