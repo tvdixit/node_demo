@@ -50,18 +50,20 @@ const roleSchema = new mongoose.Schema({
     },
     created_at: {
         type: Date,
-        default:Date.now(),
+        default: Date.now(),
     },
     updated_at: {
         type: Date,
-        default:Date.now(),
+        default: Date.now(),
     },
     // Image: {
     //     type: Image,
     //     required:true,
     // },
 });
+
 module.exports = mongoose.model('role', roleSchema)
+
 
 // const data = await User.find({ first_name: { $regex: search, $options: "i" } })
 // const search = req.query.search || "";

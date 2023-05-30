@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router()
 
-const { Register, Name, Paginate } = require("../controller/productcontroller")
+const { AddProduct, Products, getAllProduct, ProductsFind, ProductDetail, Paginate } = require("../controller/productcontroller")
 
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
@@ -24,13 +24,27 @@ router.post("/upload/image", Upload, async (req, res) => {
 
 //________________________________________________________
 router.post(
-    "/register",
-    Register
+    "/addproduct",
+    AddProduct
 )
 
 router.get(
-    "/name",
-    Name
+    "/",
+    Products
+)
+router.get(
+    "/allProduct",
+    getAllProduct
+)
+
+router.get(
+    "/product/:id",
+    ProductsFind
+)
+
+router.get(
+    "/detail",
+    ProductDetail
 )
 
 router.get(

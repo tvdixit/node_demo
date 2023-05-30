@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
-Schema = mongoose.Schema;
-const productSchema = new mongoose.Schema({
+// Schema = mongoose.Schema;
+
+const ProductSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -18,13 +19,12 @@ const productSchema = new mongoose.Schema({
         required: true,
     },
     user: {
-        type:Schema.Types.ObjectId,
-        ref: 'User',
-        required:true
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "role"
     },
     created_at: {
         type: Date,
-        default: Date.now(),
+        default: Date(),
     },
     updated_at: {
         type: Date,
@@ -32,4 +32,4 @@ const productSchema = new mongoose.Schema({
     },
 })
 
-module.exports = mongoose.model('product', productSchema)
+module.exports = mongoose.model('product', ProductSchema)
